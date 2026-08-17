@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Family Budget"
+description = "A shared kids' budget tracker for Chege and Lydiah. Both parents log in to view the monthly joint budget, add and categorize expenses, track income contributions, and see real-time balance against the KES 317,094/month budget covering rent, food, school fees, and other kids' expenses."
+version = "1.0.0"
+id = "artifacts/family-budget"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25043
+
+[services.development]
+run = "pnpm --filter @workspace/family-budget run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/family-budget", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/family-budget/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25043"
+BASE_PATH = "/"

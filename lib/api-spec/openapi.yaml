@@ -1,0 +1,1207 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Family Budget API for Chege & Lydiah
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: expenses
+    description: Expense tracking
+  - name: contributions
+    description: Monthly contributions
+  - name: budget-categories
+    description: Budget categories
+  - name: dashboard
+    description: Dashboard summaries and activity
+  - name: members
+    description: App access members
+  - name: savings-goals
+    description: Savings goals tracking
+  - name: joint-account
+    description: Joint bank account deposits and disbursements
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      operationId: getAuthUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /expenses:
+    get:
+      operationId: getExpenses
+      tags: [expenses]
+      summary: List expenses
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: number
+        - name: year
+          in: query
+          schema:
+            type: number
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expense"
+    post:
+      operationId: createExpense
+      tags: [expenses]
+      summary: Create a new expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Created expense
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+  /expenses/{id}:
+    patch:
+      operationId: updateExpense
+      tags: [expenses]
+      summary: Update an expense
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "200":
+          description: Updated expense
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteExpense
+      tags: [expenses]
+      summary: Delete an expense
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /expenses/apply-recurring:
+    post:
+      operationId: applyRecurringExpenses
+      tags: [expenses]
+      summary: Copy recurring expenses from the previous month into the current month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyRecurringInput"
+      responses:
+        "200":
+          description: Number of expenses copied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplyRecurringResult"
+
+  /budget-categories:
+    get:
+      operationId: getBudgetCategories
+      tags: [budget-categories]
+      summary: List all budget categories with amounts
+      responses:
+        "200":
+          description: Budget categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BudgetCategory"
+
+  /contributions:
+    get:
+      operationId: getContributions
+      tags: [contributions]
+      summary: List contributions
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: number
+        - name: year
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contribution"
+    post:
+      operationId: createContribution
+      tags: [contributions]
+      summary: Record a contribution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContributionInput"
+      responses:
+        "201":
+          description: Created contribution
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contribution"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Monthly budget summary — total budget, total spent, remaining, per-category spent
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: number
+        - name: year
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Recent activity feed — latest expenses and contributions
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/category-breakdown:
+    get:
+      operationId: getDashboardCategoryBreakdown
+      tags: [dashboard]
+      summary: Spending breakdown per category for a given month
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: number
+        - name: year
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Category breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryBreakdown"
+
+  /dashboard/trends:
+    get:
+      operationId: getDashboardTrends
+      tags: [dashboard]
+      summary: Month-over-month spending totals for the last N months
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Monthly trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthTrend"
+
+  /savings-goals:
+    get:
+      operationId: getSavingsGoals
+      tags: [savings-goals]
+      summary: List all savings goals
+      responses:
+        "200":
+          description: List of savings goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavingsGoal"
+    post:
+      operationId: createSavingsGoal
+      tags: [savings-goals]
+      summary: Create a new savings goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavingsGoalInput"
+      responses:
+        "201":
+          description: Created savings goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavingsGoal"
+
+  /joint-account:
+    get:
+      operationId: getJointAccount
+      tags: [joint-account]
+      summary: Get joint account balance and all transactions
+      responses:
+        "200":
+          description: Account summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JointAccountSummary"
+
+  /joint-account/deposit:
+    post:
+      operationId: createDeposit
+      tags: [joint-account]
+      summary: Deposit money into the joint account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositInput"
+      responses:
+        "201":
+          description: Created transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JointAccountTransaction"
+
+  /joint-account/disbursement:
+    post:
+      operationId: createDisbursement
+      tags: [joint-account]
+      summary: Disburse money from the joint account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisbursementInput"
+      responses:
+        "201":
+          description: Created transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JointAccountTransaction"
+
+  /joint-account/{id}:
+    delete:
+      operationId: deleteJointAccountTransaction
+      tags: [joint-account]
+      summary: Delete a joint account transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /savings-goals/cascade-contribute:
+    post:
+      operationId: cascadeContribute
+      tags: [savings-goals]
+      summary: Distribute a payment waterfall-style across multiple savings goals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CascadeContributeInput"
+      responses:
+        "200":
+          description: Allocation breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CascadeContributeResult"
+
+  /savings-goals/{id}/contributions:
+    get:
+      operationId: getSavingsGoalContributions
+      tags: [savings-goals]
+      summary: List contribution history for a savings goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavingsGoalContribution"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /savings-goals/{id}/contribute:
+    post:
+      operationId: contributeToSavingsGoal
+      tags: [savings-goals]
+      summary: Atomically add an amount to a savings goal's current balance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavingsGoalContributeInput"
+      responses:
+        "200":
+          description: Updated savings goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavingsGoal"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /savings-goals/{id}:
+    patch:
+      operationId: updateSavingsGoal
+      tags: [savings-goals]
+      summary: Update a savings goal (name, target, deadline, currentAmount, isCompleted)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavingsGoalUpdateInput"
+      responses:
+        "200":
+          description: Updated savings goal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavingsGoal"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteSavingsGoal
+      tags: [savings-goals]
+      summary: Delete a savings goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /members:
+    get:
+      operationId: getMembers
+      tags: [members]
+      summary: List all members with access to this app
+      responses:
+        "200":
+          description: Members list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+    post:
+      operationId: addMember
+      tags: [members]
+      summary: Add a new member by Replit user ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddMemberInput"
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          description: Invalid input or member already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /members/{userId}:
+    delete:
+      operationId: removeMember
+      tags: [members]
+      summary: Remove a member
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: ["string", "null"]
+        firstName:
+          type: ["string", "null"]
+        lastName:
+          type: ["string", "null"]
+        profileImageUrl:
+          type: ["string", "null"]
+      required:
+        - id
+
+    Expense:
+      type: object
+      properties:
+        id:
+          type: number
+        amount:
+          type: number
+          description: Amount in KES
+        category:
+          type: string
+        description:
+          type: string
+        notes:
+          type: ["string", "null"]
+          description: Optional extra notes
+        paidById:
+          type: string
+        paidByName:
+          type: string
+        isRecurring:
+          type: boolean
+        date:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - amount
+        - category
+        - description
+        - paidById
+        - paidByName
+        - isRecurring
+        - date
+        - createdAt
+
+    ExpenseInput:
+      type: object
+      properties:
+        amount:
+          type: number
+        category:
+          type: string
+        description:
+          type: string
+        notes:
+          type: string
+        paidById:
+          type: string
+          description: User ID of who paid — must be a recognised household member
+        isRecurring:
+          type: boolean
+        date:
+          type: string
+          format: date
+      required:
+        - amount
+        - category
+        - description
+        - paidById
+        - date
+
+    ApplyRecurringInput:
+      type: object
+      properties:
+        month:
+          type: number
+          description: Target month (1-12)
+        year:
+          type: number
+          description: Target year
+      required:
+        - month
+        - year
+
+    ApplyRecurringResult:
+      type: object
+      properties:
+        copied:
+          type: number
+          description: Number of expenses copied
+      required:
+        - copied
+
+    BudgetCategory:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        budgetAmount:
+          type: number
+          description: Monthly budget in KES
+        priority:
+          type: number
+          description: 1=survival essentials, 2=health/education, 3=household, 4=connectivity, 5=discretionary
+        color:
+          type: string
+      required:
+        - id
+        - name
+        - budgetAmount
+        - priority
+        - color
+
+    Contribution:
+      type: object
+      properties:
+        id:
+          type: number
+        userId:
+          type: string
+        userName:
+          type: string
+        amount:
+          type: number
+          description: Amount in KES
+        month:
+          type: number
+        year:
+          type: number
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - userName
+        - amount
+        - month
+        - year
+        - createdAt
+
+    ContributionInput:
+      type: object
+      properties:
+        amount:
+          type: number
+        month:
+          type: number
+        year:
+          type: number
+        note:
+          type: string
+        forUserId:
+          type: string
+          description: Record this contribution on behalf of another household member (their ID)
+      required:
+        - amount
+        - month
+        - year
+
+    DashboardSummary:
+      type: object
+      properties:
+        month:
+          type: number
+        year:
+          type: number
+        totalBudget:
+          type: number
+        totalSpent:
+          type: number
+        remaining:
+          type: number
+        chegeContributed:
+          type: number
+        lydiahContributed:
+          type: number
+        chegeSpent:
+          type: number
+        lydiahSpent:
+          type: number
+        chegeNet:
+          type: number
+        lydiahNet:
+          type: number
+        chegeTarget:
+          type: number
+        lydiahTarget:
+          type: number
+        expenseCount:
+          type: number
+      required:
+        - month
+        - year
+        - totalBudget
+        - totalSpent
+        - remaining
+        - chegeContributed
+        - lydiahContributed
+        - chegeSpent
+        - lydiahSpent
+        - chegeNet
+        - lydiahNet
+        - chegeTarget
+        - lydiahTarget
+        - expenseCount
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          description: "expense or contribution"
+        amount:
+          type: number
+        description:
+          type: string
+        userName:
+          type: string
+        category:
+          type: ["string", "null"]
+        date:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - amount
+        - description
+        - userName
+        - date
+
+    CategoryBreakdown:
+      type: object
+      properties:
+        category:
+          type: string
+        budgetAmount:
+          type: number
+        spentAmount:
+          type: number
+        remaining:
+          type: number
+        percentUsed:
+          type: number
+        priority:
+          type: number
+        color:
+          type: string
+      required:
+        - category
+        - budgetAmount
+        - spentAmount
+        - remaining
+        - percentUsed
+        - priority
+        - color
+
+    MonthTrend:
+      type: object
+      properties:
+        month:
+          type: number
+        year:
+          type: number
+        label:
+          type: string
+          description: Human-readable label e.g. "Aug 2026"
+        totalSpent:
+          type: number
+        expenseCount:
+          type: number
+      required:
+        - month
+        - year
+        - label
+        - totalSpent
+        - expenseCount
+
+    Member:
+      type: object
+      properties:
+        userId:
+          type: string
+        userName:
+          type: ["string", "null"]
+        addedAt:
+          type: string
+          format: date-time
+      required:
+        - userId
+        - addedAt
+
+    AddMemberInput:
+      type: object
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+
+    SavingsGoal:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        targetAmount:
+          type: number
+          description: Target amount in KES
+        currentAmount:
+          type: number
+          description: Current saved amount in KES
+        deadline:
+          type: ["string", "null"]
+          format: date
+          description: Optional deadline date
+        createdByUserId:
+          type: string
+        isCompleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - targetAmount
+        - currentAmount
+        - createdByUserId
+        - isCompleted
+        - createdAt
+
+    JointAccountTransaction:
+      type: object
+      properties:
+        id:
+          type: number
+        type:
+          type: string
+          description: deposit or disbursement
+        amount:
+          type: number
+        description:
+          type: string
+        madeById:
+          type: string
+          nullable: true
+        madeByName:
+          type: string
+          nullable: true
+        expenseCategory:
+          type: string
+          nullable: true
+          description: Expense category this disbursement covers (optional)
+        date:
+          type: string
+          format: date
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - amount
+        - description
+        - date
+        - createdAt
+
+    JointAccountSummary:
+      type: object
+      properties:
+        balance:
+          type: number
+        totalDeposits:
+          type: number
+        totalDisbursements:
+          type: number
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/JointAccountTransaction"
+      required:
+        - balance
+        - totalDeposits
+        - totalDisbursements
+        - transactions
+
+    DepositInput:
+      type: object
+      properties:
+        amount:
+          type: number
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        madeById:
+          type: string
+          description: Defaults to the logged-in user
+      required:
+        - amount
+        - description
+        - date
+
+    DisbursementInput:
+      type: object
+      properties:
+        amount:
+          type: number
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        expenseCategory:
+          type: string
+          description: Optional expense category this disbursement is paying for
+      required:
+        - amount
+        - description
+        - date
+
+    SavingsGoalInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targetAmount:
+          type: number
+        deadline:
+          type: string
+          format: date
+          description: Optional deadline date
+      required:
+        - name
+        - targetAmount
+
+    CascadeContributeInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Total payment amount to distribute (in KES)
+        goalIds:
+          type: array
+          items:
+            type: number
+          description: Optional ordered list of goal IDs; defaults to all active goals by creation date
+      required:
+        - amount
+
+    CascadeContributeAllocation:
+      type: object
+      properties:
+        goalId:
+          type: number
+        goalName:
+          type: string
+        allocated:
+          type: number
+        newTotal:
+          type: number
+        completed:
+          type: boolean
+      required:
+        - goalId
+        - goalName
+        - allocated
+        - newTotal
+        - completed
+
+    CascadeContributeResult:
+      type: object
+      properties:
+        totalAmount:
+          type: number
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CascadeContributeAllocation"
+        leftover:
+          type: number
+      required:
+        - totalAmount
+        - allocations
+        - leftover
+
+    SavingsGoalContribution:
+      type: object
+      properties:
+        id:
+          type: number
+        goalId:
+          type: number
+        amount:
+          type: number
+          description: Amount contributed in KES
+        note:
+          type: string
+          nullable: true
+          description: Optional note — "Manual adjustment" for balance corrections
+        createdByUserId:
+          type: string
+        contributorName:
+          type: string
+          description: Display name of the user who made the contribution
+        createdAt:
+          type: string
+      required:
+        - id
+        - goalId
+        - amount
+        - createdByUserId
+        - contributorName
+        - createdAt
+
+    SavingsGoalContributeInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Amount to add to the goal (in KES)
+        note:
+          type: string
+          description: Optional note for this contribution
+      required:
+        - amount
+
+    SavingsGoalUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targetAmount:
+          type: number
+        currentAmount:
+          type: number
+        deadline:
+          type: ["string", "null"]
+          format: date
+        isCompleted:
+          type: boolean
+        reason:
+          type: string
+          description: Required when currentAmount correction reduces the balance by more than 50%

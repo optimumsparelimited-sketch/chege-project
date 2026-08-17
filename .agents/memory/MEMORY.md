@@ -1,0 +1,13 @@
+- [Zod in api-server routes](zod-api-server.md) — use `import { z } from 'zod'` not `zod/v4`; esbuild can't resolve the subpath
+- [OpenAPI integer types](openapi-integer-types.md) — use `type: number` not `type: integer`; Orval generates `zod.int()` for integer which breaks on Zod v3
+- [Mobile deep link URL parsing](mobile-deeplink-parsing.md) — mobile-budget://auth?token=X has 'auth' as hostname not path; check parsed.hostname not parsed.path
+- [Mobile AsyncStorage usage](mobile-asyncstorage.md) — AsyncStorage is installed (v2.2.0 devDep); used for UI prefs (dashboard privacy, goal filters, expense month). Not for auth (SecureStore only).
+- [Mobile goals.tsx FlatList + useMemo](mobile-goals-imports.md) — goals.tsx uses both FlatList and useMemo; add them to React/RN imports when modifying that file or TS errors will surface.
+- [Bank screen delete hook](bank-delete-hook.md) — useDeleteJointAccountTransaction({ id }) is the hook for deleting joint-account transactions; long-press triggers it.
+- [Consistency check endpoint](consistency-check.md) — GET /api/savings-goals/consistency-check returns { ok, inconsistentGoals: [{id, name, currentAmount, contributionTotal, discrepancy}] }; no generated React hook exists — use useQuery with direct fetch.
+- [Cascade contribute server](cascade-contribute-server.md) — POST /savings-goals/cascade-contribute uses db.transaction() with for("update") row locks; deadlock-safe and crash-safe by design.
+- [Settings screen added](settings-screen.md) — artifacts/mobile-budget/app/(tabs)/settings.tsx exists; wired into both NativeTabLayout and ClassicTabLayout in _layout.tsx.
+- [OTA export for pnpm workspace](ota-export.md) — expo export and eas update need special setup; see topic file for the full recipe.
+- [OTA bundling fix for RN 0.81.5 + pnpm](ota-bundling-fix.md) — pnpm-safe transformIgnorePatterns pattern + hermes-v0 profile needed for hermesc to compile the bundle
+- [Activity type constants](activity-types.md) — ACTIVITY_TYPE = { EXPENSE, CONTRIBUTION } in lib/activityTypes.ts (mobile) and src/lib/activityTypes.ts (web); use instead of inline strings.
+- [Bank balance invalidation](bank-balance-invalidation.md) — after deposit/disbursement/delete on bank.tsx, call invalidateQueries({ queryKey: getGetJointAccountQueryKey() }) so home-screen card updates immediately.

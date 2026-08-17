@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "effa7c71-0641-41fb-ba15-219661b89ab8"
+      }
+    },
+    "android": {
+      "package": "com.optimumprimesolutions.workspace"
+    }
+  }
+}
