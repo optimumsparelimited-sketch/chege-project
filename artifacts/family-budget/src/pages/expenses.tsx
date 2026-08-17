@@ -159,7 +159,7 @@ export default function Expenses() {
           category: addForm.category,
           description: addForm.description,
           notes: addForm.notes || undefined,
-          paidById: addForm.paidById || undefined,
+          paidById: addForm.paidById,
           isRecurring: addForm.isRecurring,
           date: addForm.date,
         }
@@ -183,7 +183,7 @@ export default function Expenses() {
           category: editForm.category,
           description: editForm.description,
           notes: editForm.notes || undefined,
-          paidById: editForm.paidById || undefined,
+          paidById: editForm.paidById,
           isRecurring: editForm.isRecurring,
           date: editForm.date,
         }
